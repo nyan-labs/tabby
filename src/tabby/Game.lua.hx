@@ -1,5 +1,6 @@
 package tabby;
 
+import love.graphics.GraphicsModule;
 import tabby.inputs.Mouse;
 import love.Application;
 

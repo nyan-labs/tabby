@@ -1,5 +1,6 @@
 package tabby.utils.event;
 
+import haxe.macro.ExprTools;
 import haxe.macro.Expr.ComplexType;
 import haxe.macro.Expr.TypeDefinition;
 import haxe.macro.TypeTools;
@@ -22,12 +23,10 @@ class EventTarget {
         fields.remove(f);
       });
 
-    var listeners = macro new Array<haxe.Rest<Any>->Void>();
-
     fields.push({
       name: "__listeners",
       access: [APrivate],
-      kind: FVar(macro: Array<haxe.Rest<Any>->Void>, listeners),
+      kind: FVar(macro: Array<haxe.Rest<Any>->Void>, macro new Array<haxe.Rest<Any>->Void>()),
       pos: Context.currentPos()
     });
     
@@ -58,8 +57,8 @@ class EventTarget {
 
     var emit = Subfield.make_subfield("emit", emit_fields, [APublic]);
 
-    fields.push(emit);
-
+    fields.push(emit.field);
+    fields = Subfield.inject_constructor(fields, [emit.constructor]);
 
     var on_fields = event_fields.map(field -> {
       field.access = [APublic];
@@ -86,7 +85,8 @@ class EventTarget {
 
     var on = Subfield.make_subfield("on", on_fields, [APublic]);
     
-    fields.push(on);
+    fields.push(on.field);
+    fields = Subfield.inject_constructor(fields, [on.constructor]);
 
 
     var once_fields = event_fields.map(field -> {
@@ -110,8 +110,8 @@ class EventTarget {
     });
 
     var once = Subfield.make_subfield("once", once_fields, [APublic]);
-    
-    fields.push(once);
+    fields.push(once.field);
+    fields = Subfield.inject_constructor(fields, [once.constructor]);
     
     // // make .on .once .emit by making this a util class :3
     // for(field in fields.filter(f -> 
@@ -222,7 +222,7 @@ class EventTarget {
     
     // if(!fields.has(constructor_field))
     //   fields.push(constructor_field);
-    
+
     return fields;
   }
 }
