@@ -1,0 +1,13 @@
+{
+  "name": "tabby",
+  "url" : "https://github.com/nyan-labs/tabby/",
+  "license": "GPL",
+  "tags": ["game", "engine", "game-engine", "tabby"],
+  "description": "love2d-based game engine",
+  "version": "0.0.1-alpha",
+  "classPath": "src/",
+  "releasenote": "not released",
+  "contributors": ["qzipp"],
+  "dependencies": {},
+  "main": ""
+}

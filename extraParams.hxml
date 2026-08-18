@@ -1,0 +1,4 @@
+-cp src
+
+-lib love
+-D lua-vanilla
