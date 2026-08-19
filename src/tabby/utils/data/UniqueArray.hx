@@ -8,6 +8,7 @@ abstract UniqueArray<T>(Array<T>) {
   }
 
   public function add(x: T) {
+    trace(x);
     if(!has(x)) this.push(x);
   }
 

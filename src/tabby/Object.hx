@@ -36,7 +36,10 @@ class Object implements Drawable implements Destructable {
 
   public function update(delta: Float): Void {}
 
-  public function draw(): Void {}
+  public function draw(): Void {
+    for(c in children)
+      c.draw();
+  }
 
   // love.Object methods
   public function release()

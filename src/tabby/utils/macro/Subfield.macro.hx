@@ -32,7 +32,7 @@ class Subfield {
             pos: f.pos
           };
         case FVar(t, e): e;
-        case _: Context.error("can't do set/get property fields", f.pos);
+        case _: Context.error("can't do set/get property fields: " + f.kind, f.pos);
       },
       quotes: Unquoted
     }));

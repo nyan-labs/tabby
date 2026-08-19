@@ -14,4 +14,14 @@ class Entity extends Object {
     super();
     texture = null;
   }
+
+  override public function draw() {
+    Graphics.push();
+    Graphics.setColor(1, 0, 1);
+    Graphics.rectangle(Fill, position.x, position.y, size.x, size.y);
+    Graphics.pop();
+    Graphics.setColor(1, 1, 1); // idk
+
+    super.draw();
+  }
 }

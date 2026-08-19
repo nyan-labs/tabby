@@ -1,5 +1,7 @@
 package tabby.utils.event;
 
+import haxe.display.Display.FieldResolution;
+import haxe.Rest;
 import haxe.macro.ExprTools;
 import haxe.macro.Expr.ComplexType;
 import haxe.macro.Expr.TypeDefinition;
@@ -7,7 +9,6 @@ import haxe.macro.TypeTools;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
-import haxe.Rest;
 import tabby.utils.macro.Subfield;
 
 using Lambda;
@@ -26,7 +27,7 @@ class EventTarget {
     fields.push({
       name: "__listeners",
       access: [APrivate],
-      kind: FVar(macro: Array<haxe.Rest<Any>->Void>, macro new Array<haxe.Rest<Any>->Void>()),
+      kind: FVar(macro: tabby.utils.event.EventTarget.EventListeners, macro new Map()),
       pos: Context.currentPos()
     });
     
@@ -39,13 +40,16 @@ class EventTarget {
           params: f.params,
           ret: macro: Void,
           expr: macro {
-            var name = $v{field.name};
-            trace('emit $name');
+            var current_type = $v{field.name};
             
-            for(listener in __listeners) {
-              listener($a{f.args.map(a -> macro $i{a.name})});
+            for(type => listeners in __listeners) {
+              if(type == current_type) {
+                for(listener in listeners)
+                  listener($a{f.args.map(a -> macro $i{a.name})});
+                
+                __listeners.set(type, listeners.filter(l -> l != null));
+              }
             }
-            trace(__listeners);
           }
         });
         
@@ -61,6 +65,15 @@ class EventTarget {
     fields = Subfield.inject_constructor(fields, [emit.constructor]);
 
     var on_fields = event_fields.map(field -> {
+      field = {
+        name: field.name,
+        meta: field.meta,
+        pos: field.pos,
+        kind: field.kind,
+        access: field.access,
+        doc: field.doc
+      };
+
       field.access = [APublic];
       
       field.kind = switch field.kind {
@@ -73,7 +86,14 @@ class EventTarget {
           params: f.params,
           ret: macro: Void,
           expr: macro {
-            __listeners.push(cast listener);
+            var listeners = __listeners.get($v{field.name}) ?? {
+              var l = new Array();
+              __listeners.set($v{field.name}, l);
+              
+              l;
+            }
+
+            listeners.push(cast listener);
           }
         });
         
@@ -90,16 +110,50 @@ class EventTarget {
 
 
     var once_fields = event_fields.map(field -> {
+      field = {
+        name: field.name,
+        meta: field.meta,
+        pos: field.pos,
+        kind: field.kind,
+        access: field.access,
+        doc: field.doc
+      };
+
       field.access = [APublic];
-      
+
       field.kind = switch field.kind {
-        case FFun(f): FFun({
-          args: f.args,
+        case FFun(f): 
+          var callback: Expr = {
+            expr: EFunction(FNamed("once"), {
+              args: f.args,
+              expr: macro {
+                listener($a{f.args.map(a -> macro $i{a.name})});
+
+                var index = listeners.indexOf(cast once);
+                listeners[index] = null;
+              }
+            }),
+            pos: Context.currentPos()
+          }
+        
+        FFun({
+          args: [{
+            name: "listener",
+            type: TFunction(f.args.map(a -> TNamed(a.name, a.type)), macro: Void)
+          }],
           params: f.params,
           ret: macro: Void,
           expr: macro {
-            var name = $v{field.name};
-            trace('once $name');
+            var listeners = __listeners.get($v{field.name}) ?? {
+              var l = new Array();
+              __listeners.set($v{field.name}, l);
+              
+              l;
+            }
+
+            $callback;
+
+            listeners.push(cast once);
           }
         });
         
